@@ -3,145 +3,254 @@
  Created:	4/15/2018 8:43:27 PM
  Author:	jcats
 */
+#include <CapacitiveSensor.h>
+#include <Wire.h>
+ 
+// unique address of the slave device
+// has to be unique within all devices connected to master over i2c
+const int i2c_address = 5;
 
-/*
-Name:		mega_modi2c.ino
-Created:	4/14/2018 2:20:30 PM
-Author:	jcats
-*/
-#include <Wire\src\Wire.h>
 
-char position_char[6];
+// each pad is an object of type CapacitiveSensor
+// each slider is an array of 5 pads
 
-// the setup function runs once when you press reset or power the board
-void setup() {
-	Wire.begin(2);
-	Wire.onRequest(farewellTransmission);
+CapacitiveSensor SlideOne[5] = {
+	CapacitiveSensor(2,22),
+	CapacitiveSensor(2,24),
+	CapacitiveSensor(2,26),
+	CapacitiveSensor(2,28),
+	CapacitiveSensor(2,30),
+};
+
+CapacitiveSensor SlideTwo[5] = {
+	CapacitiveSensor(3,23),
+	CapacitiveSensor(3,25),
+	CapacitiveSensor(3,27),
+	CapacitiveSensor(3,29),
+	CapacitiveSensor(3,31),
+};
+
+CapacitiveSensor SlideThree[5] = {
+	CapacitiveSensor(4,32),
+	CapacitiveSensor(4,34),
+	CapacitiveSensor(4,36),
+	CapacitiveSensor(4,38),
+	CapacitiveSensor(4,40),
+	
+};
+
+CapacitiveSensor SlideFour[5] = {
+	CapacitiveSensor(5,33),
+	CapacitiveSensor(5,35),
+	CapacitiveSensor(5,37),
+	CapacitiveSensor(5,39),
+	CapacitiveSensor(5,41),
+};
+
+CapacitiveSensor SlideFive[5] = {
+	CapacitiveSensor(6,42),
+	CapacitiveSensor(6,44),
+	CapacitiveSensor(6,46),
+	CapacitiveSensor(6,48),
+	CapacitiveSensor(6,50),
+
+};
+
+CapacitiveSensor SlideSix[5] = {
+	CapacitiveSensor(7,43),
+	CapacitiveSensor(7,45),
+	CapacitiveSensor(7,47),
+	CapacitiveSensor(7,49),
+	CapacitiveSensor(7,51),
+};
+
+
+uint8_t position[6] = { 1,2,3,4,5,6 };
+
+
+uint8_t readSlider(CapacitiveSensor Slide[5],int samples,uint8_t pos,int threshold)
+{
+	int read[5] = { 0 };
+	int weighted_sum = 0;
+	int total_cap = 0;
+	int numtouched = 0;
+	float position;
+
+		for (int i = 0; i < 5; i++)
+	{
+		if (Slide[i].capacitiveSensor(1) <= 0)
+		{
+			Serial.print("Sensor ");
+				Serial.print(i);
+				Serial.println(" not attached!,timeout");
+			read[i] = 0;
+			
+		}
+		else
+		{
+			read[i] = Slide[i].capacitiveSensor(samples);
+			constrain(read[i], 0, 5000);
+			//Serial.println(read[i]);
+		}
+		if (read[i] > threshold)
+		{
+			weighted_sum += (i + 1)*read[i];
+			total_cap += read[i];
+			numtouched++;
+		}
+	}
+		//Serial.println(numtouched);
+		Serial.println(weighted_sum);
+	if (numtouched > 0)
+	{
+		//Serial.println((float(weighted_sum) / float(total_cap)));
+		position = 30* (((float(weighted_sum) / float(total_cap))-1));
+		
+		
+		//Serial.print("the position is ");
+		return uint8_t(position);
+		//Serial.println(position);	
+	}
+	else return pos;
+}
+
+uint8_t readSliderdebug(CapacitiveSensor Slide[5], int samples, uint8_t pos, int threshold)
+{
+	int read[5] = { 0 };
+	float weighted_sum = 0;
+	float total_cap = 0;
+	int numtouched = 0;
+	float position;
+
+	for (int i = 0; i < 5; i++)
+	{
+		if (Slide[i].capacitiveSensor(1) <= -2)
+		{
+			Serial.print("Sensor ");
+			Serial.print(i);
+			Serial.println(" not attached!,timeout");
+			read[i] = 0;
+
+		}
+		else
+		{
+			read[i] = Slide[i].capacitiveSensor(samples);
+			constrain(read[i], 0, 5000);
+			//Serial.println(read[i]);
+		}
+		if (read[i] > threshold)
+		{
+			weighted_sum += (i + 1)*read[i];
+			total_cap += read[i];
+			numtouched++;
+		}
+	}
+	//Serial.println(numtouched);
+	
+	if (numtouched > 0)
+	{
+		//Serial.println((float(weighted_sum) / float(total_cap)));
+		position = 30 * (((weighted_sum / total_cap) - 1));
+
+		Serial.println(position);
+		//Serial.print("the position is ");
+		return uint8_t(position);
+		Serial.println(position);	
+	}
+	else return pos;
 }
 
 
-// the loop function runs over and over again until power down or reset
-void loop() {
+uint8_t readSliderdebug2(CapacitiveSensor Slide[5], int samples, uint8_t pos, int threshold)
+{
+	// allocate an array to hold the readings, initialize all to zero
+	int read[5] = { 0 };
+	float weighted_sum = 0;
+	float total_cap = 0;
+	int numtouched = 0;
+	float position;
 
+	for (int i = 0; i < 5; i++)
+	{
+		if (Slide[i].capacitiveSensor(1) <= -2)
+		{
+			Serial.print("Sensor ");
+			Serial.print(i);
+			Serial.println(" not attached!,timeout");
+			read[i] = 0;
 
+		}
+		else
+		{
+			read[i] = Slide[i].capacitiveSensor(samples);
+			constrain(read[i], 0, 5000);
+			Serial.println(read[i]);
+		}
+		if (read[i] > threshold)
+		{
+			weighted_sum += (i + 1)*read[i];
+			total_cap += read[i];
+			numtouched++;
+		}
+	}
+	//Serial.println(numtouched);
 
+	if (numtouched > 0)
+	{
+		//Serial.println((float(weighted_sum) / float(total_cap)));
+		position = 30 * (((weighted_sum / total_cap) - 1));
+
+		Serial.println(position);
+		//Serial.print("the position is ");
+		return uint8_t(position);
+		Serial.println(position);
+	}
+	else return pos;
 }
 
-void farewellTransmission()
+void send_positions()
 {
 	for (int i = 0; i < 6; i++)
 	{
-		Wire.write(position_char[i]);
+		position[i] = constrain(position[i], 0, 120);
+		Wire.write((position[i]));
+
+
 	}
+	Serial.println("message sent");
 }
 
 
 
 
-
-#include <CapacitiveSensor.h>
-#include "capslide.h"
-
-int outputPins[6] = { 2,3,4,5,6,7 };
-
-
-int recvpins1[5] = { 22,24,26,28,30 };
-int recvpins2[5] = { 23,25,27,29,31 };
-int recvpins3[5] = { 32,34,36,38,40 };
-int recvpins4[5] = { 33,35,37,39,41 };
-int recvpins5[5] = { 42,44,46,48,50 };
-int recvpins6[5] = { 43,45,47,49,51 };
-
-int sendpin[6] = { 8,9,10,11,12,13 };
-
-
-
-double position[6] = { 300, 300, 300, 300, 300, 300 };
-double position_mem = 2.5;
-double *position_ptr = &position_mem;
-int range = 9000;
-double curentposition = 1;
-
-CapacitiveSensor Slide1[5] = {
-	CapacitiveSensor(sendpin[0], recvpins1[0]),
-	CapacitiveSensor(sendpin[0], recvpins1[1]),
-	CapacitiveSensor(sendpin[0], recvpins1[2]),
-	CapacitiveSensor(sendpin[0], recvpins1[3]),
-	CapacitiveSensor(sendpin[0], recvpins1[4]),
-};
-
-CapacitiveSensor Slide2[5] = {
-	CapacitiveSensor(sendpin[1], recvpins2[0]),
-	CapacitiveSensor(sendpin[1], recvpins2[1]),
-	CapacitiveSensor(sendpin[1], recvpins2[2]),
-	CapacitiveSensor(sendpin[1], recvpins2[3]),
-	CapacitiveSensor(sendpin[1], recvpins2[4]),
-};
-
-CapacitiveSensor Slide3[5] = {
-	CapacitiveSensor(sendpin[2], recvpins3[0]),
-	CapacitiveSensor(sendpin[2], recvpins3[1]),
-	CapacitiveSensor(sendpin[2], recvpins3[2]),
-	CapacitiveSensor(sendpin[2], recvpins3[3]),
-	CapacitiveSensor(sendpin[2], recvpins3[4]),
-};
-
-CapacitiveSensor Slide4[5] = {
-	CapacitiveSensor(sendpin[3], recvpins4[0]),
-	CapacitiveSensor(sendpin[3], recvpins4[1]),
-	CapacitiveSensor(sendpin[3], recvpins4[2]),
-	CapacitiveSensor(sendpin[3], recvpins4[3]),
-	CapacitiveSensor(sendpin[3], recvpins4[4]),
-};
-
-CapacitiveSensor Slide5[5] = {
-	CapacitiveSensor(sendpin[4], recvpins5[0]),
-	CapacitiveSensor(sendpin[4], recvpins5[1]),
-	CapacitiveSensor(sendpin[4], recvpins5[2]),
-	CapacitiveSensor(sendpin[4], recvpins5[3]),
-	CapacitiveSensor(sendpin[4], recvpins5[4]),
-};
-
-CapacitiveSensor Slide6[5] = {
-	CapacitiveSensor(sendpin[5], recvpins6[0]),
-	CapacitiveSensor(sendpin[5], recvpins6[1]),
-	CapacitiveSensor(sendpin[5], recvpins6[2]),
-	CapacitiveSensor(sendpin[5], recvpins6[3]),
-	CapacitiveSensor(sendpin[5], recvpins6[4]),
-};
+/*---------------------MAIN-------------------------*/
 
 // the setup function runs once when you press reset or power the board
-void setup() {
-	Serial.begin(57600);
-
-	Serial.println("hello");
-
-	for (int i = 0; i <6; i++)	pinMode(outputPins[i], OUTPUT);
-	;
-
+void setup() 
+{
+	Wire.begin(i2c_address);
+	Wire.onRequest(send_positions);
 }
 
+//
+int threshold = 200;
 // the loop function runs over and over again until power down or reset
 void loop() {
-	readSlider_debug(Slide1, outputPins[0], position[0], 800, 250, 15);// sending on one pin to 5 pads
-																	   //long oldmilis = micros();
-	delay(10);
-	//delay(1);
-	readSlider(Slide2, outputPins[1], position[1], 800, 250, 15);
-	delay(10);
-	readSlider(Slide3, outputPins[2], position[2], 1000, 250, 15);
 
-	readSlider(Slide4, outputPins[3], position[3], 1000, 250);
+	position[0]=  readSliderdebug(SlideOne, 10, position[0],threshold);
 
-	readSlider(Slide5, outputPins[4], position[4], 1000, 250);
+	position[1] = readSliderdebug(SlideTwo, 10, position[1], threshold);
 
-	readSlider(Slide6, outputPins[5], position[5], 1000, 250);
+	position[2] = readSliderdebug(SlideThree, 10, position[2], threshold);
 
-	for (int i = 0; i < 3; i++)
-	{
-		Serial.println(position[i]);
-	}
-	Serial.println("next");
-	delay(40);
+	position[3] = readSliderdebug(SlideFour, 10, position[3], threshold);
+
+	position[4] = readSliderdebug(SlideFive, 10, position[4], threshold);
+
+	position[5] = readSliderdebug2(SlideSix, 10, position[5], threshold);
+	
+	// wait one second, cap sensors need some time to discharge
+	delay(1);
+
 }
 
